@@ -3,6 +3,8 @@ package com.gaurav.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,61 +14,44 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.gaurav.model.User;
-import com.gaurav.repository.UserRepository;
+import com.gaurav.service.UserService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
+@RequiredArgsConstructor
 public class UserController {
-    private final UserRepository userRepository;
-
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final UserService userService;
 
     @PostMapping("/api/users")
-    public User createUser(@RequestBody @Valid User user) {
-        return userRepository.save(user);
+    public ResponseEntity<User> createUser(@RequestBody @Valid User user) {
+        User createdUser = userService.createUser(user);
+        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
     @GetMapping("/api/users")
-    public List<User> getUser() {
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> getAllUser() {
+        List<User> users = userService.getAllUser();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
     @GetMapping("/api/user/{userId}")
-    public User getUserById(@PathVariable Long userId) throws Exception {
-
-        Optional<User> otp = userRepository.findById(userId);
-        if (otp.isPresent()) {
-            return otp.get();
-        }
-        throw new Exception("now found user");
+    public ResponseEntity<User> getUserById(@PathVariable Long userId) throws Exception {
+        User user = userService.getUserById(userId);
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
     @PutMapping("/api/user/{Id}")
-    public User updateUserById(@PathVariable Long Id, @RequestBody User user) throws Exception {
-        Optional<User> otp = userRepository.findById(Id);
-        if (otp.isEmpty()) {
-            throw new Exception("not found");
-        }
-        User existingUser = otp.get();
-        existingUser.setFullName(user.getFullName());
-        existingUser.setEmail(user.getEmail());
-
-        return userRepository.save(existingUser);
+    public ResponseEntity<User> updateUserById(@PathVariable Long Id, @RequestBody User user) throws Exception {
+        User userUpdated = userService.updateUserById(Id, user);
+        return new ResponseEntity<>(userUpdated, HttpStatus.OK);
     }
 
     @DeleteMapping("/api/user/{Id}")
-    public User deleteById(@PathVariable Long Id) throws Exception {
-        Optional<User> otp = userRepository.findById(Id);
-        if (otp.isEmpty()) {
-            throw new Exception("not found");
-        }
-        User existingUser = otp.get();
-        userRepository.delete(existingUser);
-        return existingUser;
+    public ResponseEntity<String> deleteById(@PathVariable Long Id) throws Exception {
+        userService.deleteById(Id);
+        return new ResponseEntity<>("deleted", HttpStatus.OK);
     }
-
 
 }
